@@ -26,7 +26,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Formato de e-mail inválido.');
         }
 
-        const user = { username, email };
+        const user = { name: username, email };
         return user;
       }
     })

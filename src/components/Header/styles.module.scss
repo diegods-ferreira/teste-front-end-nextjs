@@ -1,0 +1,25 @@
+.headerContainer {
+  padding: 1.5rem 1rem 1rem;
+
+  .headerContentContainer {
+    align-items: flex-end;
+
+    .userInfoContainer {
+      flex: 1;
+  
+      h5 {
+        font-size: 1.2rem;
+        font-weight: 700;
+      }
+    
+      h6 {
+        font-size: 1rem;
+        font-weight: 400;
+      }
+    }
+  
+    .logoutButton {
+      color: inherit;
+    }
+  }
+}
