@@ -1,49 +1,164 @@
-@keyframes coloredBackgroundAnimation {
+@keyframes formAppearanceAnimation {
   from {
-    background: var(--primary);
+    opacity: 0;
+    transform: scale(0.8);
   }
   to {
-    background: var(--primary-darker);
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-.container {
-  height: 100vh;
-  padding: 2rem;
+@keyframes formSubmitAnimation {
+  from {
+    margin-top: calc(50vh - 48px);
+  }
+  to {
+    margin-top: 0;
+  }
+}
 
-  animation: coloredBackgroundAnimation 5s;
-  animation-direction: alternate;
-  animation-iteration-count: infinite;
+@keyframes videoCardAppearanceAnimation {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.pageContainer {
+  width: 100%;
+  min-height: calc(100vh - 6rem);
+  background: var(--background);
 
-  .formContainer {
+  @media (min-width: 769px) {
+    min-height: calc(100vh - 7rem);
+  }
+
+  .innerContainer {
     width: 100%;
-    max-width: 400px;
-    padding: 2rem;
+    padding: 1rem;
 
-    form {
+    .formContainer {
       width: 100%;
+      height: fit-content;
+      margin-top: calc(50vh - 48px);
+
+      animation: formAppearanceAnimation 0.5s;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &.animate {
+        animation: formSubmitAnimation 0.5s forwards;
+      }
+
+      .form {
+        max-width: 560px;
+        width: 100%;
+        display: flex;
+
+        & > div {
+          flex: 1;
+          margin-left: 1rem;
+        }
+      }
+    }
+
+    .noVideoFoundContainer {
+      flex: 1;
+      width: 100%;
+      margin-top: 12px;
 
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: flex-start;
 
-      .logo {
+      & > img {
+        max-width: 240px;
         width: 100%;
-        max-width: 120px;
-        margin-bottom: 5rem;
-        object-fit: contain;
+
+        @media (min-width: 769px) {
+          max-width: 360px;
+        }
       }
 
-      .input + .input {
-        margin-top: 1.5rem;
+      & > strong,
+      & > span {
+        text-align: center;
+        margin-top: 12px;
+        max-width: 220px;
       }
-  
-      .signInButton {
-        margin-top: 3rem;
+    }
+
+    .videoCardsContainer {
+      flex: 1;
+      max-width: 1200px;
+      margin-top: 1rem;
+
+      @media (min-width: 769px) {
+        margin: 1rem auto 0px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-gap: 1rem;
+      }
+
+      .videoCard {
+        width: 100%;
+        height: fit-content;
+        animation: videoCardAppearanceAnimation 0.2s;
+
+        & + div {
+          margin-top: 12px;
+
+          @media (min-width: 769px) {
+            margin-top: 0;
+          }
+        }
+
+        .videoCardMedia {
+          height: 160px;
+
+          @media (min-width: 993px) {
+            height: 200px;
+          }
+        }
+
+        .videoCardContent {
+          height: 135px;
+
+          & > h1 {
+            max-width: 100%;
+            font-size: 18px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+          }
+
+          & > h2 {
+            max-width: 100%;
+            font-size: 14px;
+            margin-bottom: 12px;
+          }
+
+          & > p {
+            max-width: 100%;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+          }
+        }
       }
     }
   }

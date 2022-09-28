@@ -5,6 +5,8 @@ import { ToastContainer } from 'react-toastify';
 
 import 'react-toastify/dist/ReactToastify.css';
 
+import { VideosListProvider } from '../contexts/VideoListContext';
+
 import { Layout } from '../components/Layout';
 
 import '../styles/global.scss';
@@ -16,11 +18,13 @@ type MyAppProps = AppProps<{
 function MyApp({ Component, pageProps: { session, ...pageProps } }: MyAppProps) {
   return (
     <SessionProvider session={session}>
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
-      
-      <ToastContainer />
+      <VideosListProvider>
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+        
+        <ToastContainer />
+      </VideosListProvider>
     </SessionProvider>
   );
 }

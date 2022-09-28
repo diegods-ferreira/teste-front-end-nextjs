@@ -1,5 +1,11 @@
 .headerContainer {
-  padding: 1.5rem 1rem 1rem;
+  padding-bottom: 1rem;
+  height: 6rem;
+  justify-content: flex-end;
+
+  @media (min-width: 769px) {
+    height: 7rem;
+  }
 
   .headerContentContainer {
     align-items: flex-end;
