@@ -160,7 +160,7 @@ export default function Home() {
                 <InputBase
                   placeholder="Pesquisar"
                   onChange={handleSearchTermInputTextChange}
-                  defaultValue={searchedTerm}
+                  value={searchedTerm || ''}
                 />
 
                 <IconButton type="submit" aria-label="search">
