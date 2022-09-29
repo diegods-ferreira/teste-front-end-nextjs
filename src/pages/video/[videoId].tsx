@@ -3,8 +3,9 @@ import { GetServerSideProps } from 'next';
 import { unstable_getServerSession } from 'next-auth';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Accordion, AccordionDetails, AccordionSummary, Backdrop, Button, CircularProgress, IconButton, Paper, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, IconButton, Paper, Typography } from '@mui/material';
 import { ArrowBack, ExpandMore, RemoveRedEye, ThumbDown, ThumbUp } from '@mui/icons-material';
+import { toast } from 'react-toastify';
 
 import { authOptions } from '../api/auth/[...nextauth]';
 
@@ -34,6 +35,7 @@ export default function VideoDetails() {
       setVideo(response.data);
       setDisplayVideoInfo(!!response.data);
     } catch (err) {
+      toast(err.response.data.message, { type: 'error' });
       setDisplayVideoInfo(false);
       setDisplayErrorMessage(true);
     }

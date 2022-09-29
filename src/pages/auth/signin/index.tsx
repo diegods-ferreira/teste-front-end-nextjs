@@ -60,15 +60,13 @@ export default function SignIn() {
     const result = await signIn('credentials', { ...formData, callbackUrl: '/', redirect: false });
 
     if (result.error !== null) {
-      if (result.status === 401) {
-        toast('Credenciais incorretas. Tente novamente, por favor.', { type: 'error' });
-      } else {
-        toast(result.error, { type: 'error' });
-      }
+      toast(result.error, { type: 'error' });
     } else {
       resetVideoSearch();
       router.push(result.url);
     }
+
+    setIsSubmiting(false);
   };
 
   return (

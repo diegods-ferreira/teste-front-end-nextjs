@@ -35,9 +35,7 @@ export const authOptions: NextAuthOptions = {
     signIn: '/auth/signin'
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
-      console.log('jwt callback', user);
-      
+    jwt: async ({ token, user }) => {      
       if (user) {
         token.user = user;
       }
@@ -45,8 +43,6 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     session: async ({ session, token }) => {
-      console.log('session callback', token);
-
       if (token) {
         session.user = token.user;
       }

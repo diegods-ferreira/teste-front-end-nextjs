@@ -27,13 +27,28 @@ export default async function getVideos(request: NextApiRequest, response: NextA
     config.params.pageToken = pageToken;
   }
 
-  const youtubeApiResponse = await youtubeApi.get<YoutubeSearchApiResponse>(
-    '/search',
-    config,
-  );
+  try {
+    const youtubeApiResponse = await youtubeApi.get<YoutubeSearchApiResponse>(
+      '/search',
+      config,
+    );
 
-  return response.json({
-    videos: youtubeApiResponse.data.items,
-    nextPageToken: youtubeApiResponse.data.nextPageToken
-  });
+    return response.json({
+      videos: youtubeApiResponse.data.items,
+      nextPageToken: youtubeApiResponse.data.nextPageToken
+    });
+  } catch (err) {
+    if (
+      err.response?.data?.error?.code === 403 &&
+      err.response?.data?.error?.message.includes('The request cannot be completed because you have exceeded')
+    ) {
+      return response.status(500).json({
+        message: 'Limite de chamadas para a API do Youtube excedido.'
+      });
+    }
+
+    return response.status(500).json({
+      message: 'Ocorreu um erro ao tentar buscar os vídeos. Tente novamente mais tarde, por favor.'
+    });
+  }
 }

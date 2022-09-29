@@ -46,6 +46,7 @@ export default function Home() {
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showErrorFeedback, setShowErrorFeedback] = useState(false);
   const [shouldAnimateSearchForm, setShouldAnimateSearchForm] = useState(false);
 
   const handleSearchTermInputTextChange = useCallback(
@@ -54,6 +55,39 @@ export default function Home() {
     },
     [updateSearchedTerm],
   );
+
+  const loadVideos = useCallback(async () => {
+    if (!searchedTerm) {
+      toast('É preciso preencher o campo de pesquisa.', { type: 'warning' });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await api.get<ApiGetVideosResponse>('/videos', {
+        params: { searchedTerm }
+      });
+
+      const { videos, nextPageToken } = response.data;
+
+      setNewVideosList(
+        videos.map(video => ({ ...video, key: video.id.videoId })),
+      );
+
+      updateNextPageToken(nextPageToken);
+
+      setShouldAnimateSearchForm(true);
+      setIsSearched(true);
+      setShowErrorFeedback(false);
+    } catch (err) {
+      toast(err.response.data.message, { type: 'error' });
+      setShowErrorFeedback(true);
+      console.log(err.response.data);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchedTerm, setNewVideosList, updateNextPageToken]);
 
   const handleSearchFormSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -64,31 +98,9 @@ export default function Home() {
         return;
       }
 
-      setIsLoading(true);
-
-      try {
-        const response = await api.get<ApiGetVideosResponse>('/videos', {
-          params: { searchedTerm }
-        });
-
-        const { videos, nextPageToken } = response.data;
-
-        setNewVideosList(
-          videos.map(video => ({ ...video, key: video.id.videoId })),
-        );
-
-        updateNextPageToken(nextPageToken);
-
-        setShouldAnimateSearchForm(true);
-        setIsSearched(true);
-      } catch (err) {
-        toast('Erro ao pesquisar.', { type: 'error' });
-        console.log(err.response.data);
-      } finally {
-        setIsLoading(false);
-      }
+      loadVideos();
     },
-    [searchedTerm, setNewVideosList, updateNextPageToken],
+    [searchedTerm, loadVideos],
   );
 
   const loadMoreVideos = useCallback(async () => {
@@ -109,8 +121,10 @@ export default function Home() {
       updateNextPageToken(response.data.nextPageToken);
 
       setIsSearched(true);
+      setShowErrorFeedback(false);
     } catch (err) {
-      toast('Erro ao pesquisar.', { type: 'error' });
+      toast(err.response.data.message, { type: 'error' });
+      setShowErrorFeedback(true);
       console.log(err.response.data);
     } finally {
       setIsLoadingMore(false);
@@ -174,15 +188,23 @@ export default function Home() {
               <div className={styles.videoCardsContainer}>
                 {videosList.map(video => <VideoCard key={video.key} video={video} />)}
 
-                {isLoadingMore && (
+                {isLoadingMore && !showErrorFeedback && (
                   <Card className={styles.videoCard}>
                     <VideoCardSkeleton />
                   </Card>
                 )}
               </div>
 
-              {!isLoadingMore && (
+              {!isLoadingMore && !showErrorFeedback && (
                 <Box ref={loadMoreVideosElementRef} sx={{ height: '2rem' }} />
+              )}
+
+              {!!showErrorFeedback && (
+                <ErrorFeedback
+                  title="Ocorreu um erro."
+                  message="Não foi possível buscar os vídeos."
+                  retryCallback={videosList.length ? loadMoreVideos : loadVideos}
+                />
               )}
             </>
           )}
