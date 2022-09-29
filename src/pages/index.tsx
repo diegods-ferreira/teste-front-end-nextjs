@@ -7,6 +7,7 @@ import Head from 'next/head';
 import { Backdrop, Button, Card, CardActions, CardContent, CardMedia, CircularProgress, IconButton, InputBase, Paper } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import { useInView } from 'react-intersection-observer';
 
 import { authOptions } from './api/auth/[...nextauth]';
 
@@ -15,6 +16,8 @@ import { api } from '../services/api';
 import { useVideosList } from '../contexts/VideoListContext';
 
 import { Video } from '../data/models/video';
+
+import { VideoCardSkeleton } from '../components/skeletons/VideoCardSkeleton';
 
 import styles from './home.module.scss';
 
@@ -36,8 +39,13 @@ export default function Home() {
     updateNextPageToken,
   } = useVideosList();
 
+  const { ref: loadMoreVideosElementRef, inView: isLoadMoreVideosElementInView } = useInView({
+    threshold: 0.3
+  });
+
   const [isSearched, setIsSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [shouldAnimateSearchForm, setShouldAnimateSearchForm] = useState(false);
 
   const handleSearchTermInputTextChange = useCallback(
@@ -83,16 +91,8 @@ export default function Home() {
     [searchedTerm, setNewVideosList, updateNextPageToken],
   );
 
-  const handleScroll = useCallback(async () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop !==
-        document.documentElement.offsetHeight ||
-      isLoading
-    ) {
-      return;
-    }
-
-    setIsLoading(true);
+  const loadMoreVideos = useCallback(async () => {
+    setIsLoadingMore(true);
 
     try {
       const response = await api.get<ApiGetVideosResponse>('/videos', {
@@ -113,9 +113,9 @@ export default function Home() {
       toast('Erro ao pesquisar.', { type: 'error' });
       console.log(err.response.data);
     } finally {
-      setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  }, [isLoading, searchedTerm, nextPageToken, addVideos, updateNextPageToken]);
+  }, [addVideos, nextPageToken, searchedTerm, updateNextPageToken]);
 
   const handleNavigateToVideoDetails = useCallback(
     (videoId: string) => {
@@ -135,10 +135,10 @@ export default function Home() {
   }, [shouldAnimateSearchForm]);
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+    if (isLoadMoreVideosElementInView && !isLoadingMore) {
+      loadMoreVideos();
+    }
+  }, [isLoadMoreVideosElementInView, isLoadingMore, loadMoreVideos]);
 
   useEffect(() => {
     setIsSearched(!!videosList.length);
@@ -210,6 +210,10 @@ export default function Home() {
                   </CardActions>
                 </Card>
               ))}
+
+              <Card ref={loadMoreVideosElementRef} className={styles.videoCard}>
+                <VideoCardSkeleton />
+              </Card>
             </div>
           )}
         </div>

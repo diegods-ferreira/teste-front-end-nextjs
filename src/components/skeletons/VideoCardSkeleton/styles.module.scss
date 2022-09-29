@@ -1,0 +1,17 @@
+.videoCardSkeletonContainer {
+  width: 100%;
+
+  .videoCardMediaSkeleton {
+    width: 100%;
+    height: 160px;
+
+    @media (min-width: 769px) {
+      height: 200px;
+    }
+  }
+
+  .videoCardContentSkeleton {
+    height: 180px;
+    padding: 1rem;
+  }
+}
