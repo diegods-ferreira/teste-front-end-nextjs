@@ -12,6 +12,8 @@ import { api } from '../../services/api';
 
 import { Video } from '../../data/models/video';
 
+import { ErrorFeedback } from '../../components/ErrorFeedback';
+
 import styles from './video-details.module.scss';
 
 export default function VideoDetails() {
@@ -57,21 +59,12 @@ export default function VideoDetails() {
 
   if (displayErrorMessage) {
     return (
-      <div className={styles.errorFeedbackContainer}>
-        <img src="/images/not-found.png" alt="Not found" />
-        <strong>Ops...</strong>
-        <span>Ocorreu um erro ao carregar os detalhes do vídeo.</span>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={fetchVideoInfoFromYoutubeApi}
-        >
-          Tentar novamente
-        </Button>
-        <Button variant="text" onClick={handleNavigateBack}>
-          Voltar
-        </Button>
-      </div>
+      <ErrorFeedback
+        title="Ops..."
+        message="Ocorreu um erro ao carregar os detalhes do vídeo."
+        retryCallback={fetchVideoInfoFromYoutubeApi}
+        showGoBackButton
+      />
     );
   }
 
