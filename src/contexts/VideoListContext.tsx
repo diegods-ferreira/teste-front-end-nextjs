@@ -2,8 +2,10 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 
 import { Video } from '../data/models/video';
 
+type VideoWithKey = Video & { key?: string };
+
 interface VideosListContextData {
-  videosList: Video[];
+  videosList: VideoWithKey[];
   searchedTerm: string;
   nextPageToken: string;
   setNewVideosList(videos: Video[]): void;
@@ -17,7 +19,7 @@ const VideosListContext = createContext<VideosListContextData>(
 );
 
 function VideosListProvider ({ children }) {
-  const [videosList, setVideosList] = useState<Video[]>([]);
+  const [videosList, setVideosList] = useState<VideoWithKey[]>([]);
   const [searchedTerm, setSearchedTerm] = useState('');
   const [nextPageToken, setNextPageToken] = useState('');
 

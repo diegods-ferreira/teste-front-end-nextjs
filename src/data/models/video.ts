@@ -12,5 +12,9 @@ export interface Video {
       };
     };
   };
-  key: string;
+  statistics: {
+    viewCount: string;
+    likeCount: string;
+    dislikeCount: string;
+  };
 }
