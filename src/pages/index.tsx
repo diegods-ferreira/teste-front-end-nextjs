@@ -3,7 +3,7 @@ import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } fro
 import { GetServerSideProps } from 'next';
 import { unstable_getServerSession } from 'next-auth';
 import Head from 'next/head';
-import { Backdrop, Card, CircularProgress, IconButton, InputBase, Paper } from '@mui/material';
+import { Backdrop, Box, Card, CircularProgress, IconButton, InputBase, Paper } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useInView } from 'react-intersection-observer';
@@ -129,6 +129,7 @@ export default function Home() {
 
   useEffect(() => {
     if (isLoadMoreVideosElementInView && !isLoadingMore) {
+      console.log('---> load more videos');
       loadMoreVideos();
     }
   }, [isLoadMoreVideosElementInView, isLoadingMore, loadMoreVideos]);
@@ -169,13 +170,21 @@ export default function Home() {
           )}
 
           {(isSearched || hasStoredSearch) && !!videosList.length && (
-            <div className={styles.videoCardsContainer}>
-              {videosList.map(video => <VideoCard key={video.key} video={video} />)}
+            <>
+              <div className={styles.videoCardsContainer}>
+                {videosList.map(video => <VideoCard key={video.key} video={video} />)}
 
-              <Card ref={loadMoreVideosElementRef} className={styles.videoCard}>
-                <VideoCardSkeleton />
-              </Card>
-            </div>
+                {isLoadingMore && (
+                  <Card className={styles.videoCard}>
+                    <VideoCardSkeleton />
+                  </Card>
+                )}
+              </div>
+
+              {!isLoadingMore && (
+                <Box ref={loadMoreVideosElementRef} sx={{ height: '2rem' }} />
+              )}
+            </>
           )}
         </div>
 
