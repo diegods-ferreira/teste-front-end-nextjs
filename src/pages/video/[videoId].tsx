@@ -13,6 +13,7 @@ import { api } from '../../services/api';
 import { Video } from '../../data/models/video';
 
 import { ErrorFeedback } from '../../components/ErrorFeedback';
+import { VideoDetailsSkeleton } from '../../components/skeletons/VideoDetailsSkeleton';
 
 import styles from './video-details.module.scss';
 
@@ -68,89 +69,87 @@ export default function VideoDetails() {
     );
   }
 
-  if (!displayVideoInfo) {
-    return (
-      <Backdrop style={{ zIndex: 1 }} open>
-        <CircularProgress color="primary" />
-      </Backdrop>
-    );
-  }
-
   return (
     <>
       <Head>
         <title>Detalhes do vídeo</title>
       </Head>
 
-      <div className={styles.videoTitleContainer}>
-        <IconButton
-          size="large"
-          color="inherit"
-          aria-label="go-back"
-          onClick={handleNavigateBack}
-        >
-          <ArrowBack />
-        </IconButton>
+      {displayVideoInfo ? (
+        <>
+          <div className={styles.videoTitleContainer}>
+            <IconButton
+              size="large"
+              color="inherit"
+              aria-label="go-back"
+              onClick={handleNavigateBack}
+            >
+              <ArrowBack />
+            </IconButton>
 
-        <Typography variant="h5" aria-label="video-title">
-          {video.snippet.title}
-        </Typography>
-      </div>
-
-      <div className={styles.pageContainer}>
-        <div className={styles.videoPlayerContainer}>
-          <iframe
-            title="youtube-video"
-            src={videoUrl}
-            frameBorder="0"
-            allow="accelerometer; autoplay;"
-            allowFullScreen
-          />
-        </div>
-
-        <Paper elevation={3} className={[styles.videoMetaContainer, styles.delayedAnimation0_6].join(' ')}>
-          <h5 aria-label="channel-title">{video.snippet.channelTitle}</h5>
-
-          <div className={styles.videoInteractionCounters}>
-            <div className={styles.videoStatistics} aria-label="like-count">
-              <ThumbUp fontSize="small" color="primary" />
-              <Typography variant="caption">
-                {video.statistics.likeCount}
-              </Typography>
-            </div>
-
-            <div className={styles.videoStatistics} aria-label="dislike-count">
-              <ThumbDown fontSize="small" color="secondary" />
-              <Typography variant="caption">
-                {video.statistics.dislikeCount}
-              </Typography>
-            </div>
-          </div>
-        </Paper>
-
-        <Accordion
-          elevation={3}
-          expanded={isDescriptionExpanded}
-          onChange={handleToggleDescriptionAccordion}
-          className={styles.videoDescriptionAccordion}
-        >
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="body2">Descrição</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <p>{video.snippet.description}</p>
-          </AccordionDetails>
-        </Accordion>
-
-        <Paper elevation={3} className={[styles.videoMetaContainer, styles.delayedAnimation1].join(' ')}>
-          <div className={styles.videoStatistics} aria-label="views-count">
-            <RemoveRedEye fontSize="small" />
-            <Typography variant="caption">
-              {video.statistics.viewCount}
+            <Typography variant="h5" aria-label="video-title">
+              {video.snippet.title}
             </Typography>
           </div>
-        </Paper>
-      </div>
+
+          <div className={styles.pageContainer}>
+            <div className={styles.videoPlayerContainer}>
+              <iframe
+                title="youtube-video"
+                src={videoUrl}
+                frameBorder="0"
+                allow="accelerometer; autoplay;"
+                allowFullScreen
+              />
+            </div>
+
+            <Paper elevation={3} className={[styles.videoMetaContainer, styles.delayedAnimation0_6].join(' ')}>
+              <h5 aria-label="channel-title">{video.snippet.channelTitle}</h5>
+
+              <div className={styles.videoInteractionCounters}>
+                <div className={styles.videoStatistics} aria-label="like-count">
+                  <ThumbUp fontSize="small" color="primary" />
+                  <Typography variant="caption">
+                    {video.statistics.likeCount}
+                  </Typography>
+                </div>
+
+                <div className={styles.videoStatistics} aria-label="dislike-count">
+                  <ThumbDown fontSize="small" color="secondary" />
+                  <Typography variant="caption">
+                    {video.statistics.dislikeCount}
+                  </Typography>
+                </div>
+              </div>
+            </Paper>
+
+            <Accordion
+              elevation={3}
+              expanded={isDescriptionExpanded}
+              onChange={handleToggleDescriptionAccordion}
+              className={styles.videoDescriptionAccordion}
+            >
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography variant="body2">Descrição</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <p>{video.snippet.description}</p>
+              </AccordionDetails>
+            </Accordion>
+
+            <Paper elevation={3} className={[styles.videoMetaContainer, styles.delayedAnimation1].join(' ')}>
+              <div className={styles.videoStatistics} aria-label="views-count">
+                <RemoveRedEye fontSize="small" />
+                <Typography variant="caption">
+                  {video.statistics.viewCount}
+                </Typography>
+              </div>
+            </Paper>
+          </div>
+        </>
+      ) : (
+        <VideoDetailsSkeleton />
+      )}
     </>
   );
 }

@@ -76,11 +76,11 @@
 .pageContainer {
   max-width: 600px;
   width: 100%;
-  padding: 12px;
+  padding: 1rem;
   margin: 0 auto;
 
   @media (min-width: 769px) {
-    margin-top: 12px;
+    margin-top: 1rem;
   }
 
   .videoPlayerContainer {
