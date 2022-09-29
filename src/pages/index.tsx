@@ -2,9 +2,8 @@
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { unstable_getServerSession } from 'next-auth';
-import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Backdrop, Button, Card, CardActions, CardContent, CardMedia, CircularProgress, IconButton, InputBase, Paper } from '@mui/material';
+import { Backdrop, Card, CircularProgress, IconButton, InputBase, Paper } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useInView } from 'react-intersection-observer';
@@ -19,6 +18,7 @@ import { Video } from '../data/models/video';
 
 import { ErrorFeedback } from '../components/ErrorFeedback';
 import { VideoCardSkeleton } from '../components/skeletons/VideoCardSkeleton';
+import { VideoCard } from '../components/VideoCard';
 
 import styles from './home.module.scss';
 
@@ -28,8 +28,6 @@ interface ApiGetVideosResponse {
 }
 
 export default function Home() {
-  const router = useRouter();
-
   const {
     videosList,
     searchedTerm,
@@ -119,13 +117,6 @@ export default function Home() {
     }
   }, [addVideos, nextPageToken, searchedTerm, updateNextPageToken]);
 
-  const handleNavigateToVideoDetails = useCallback(
-    (videoId: string) => {
-      router.push(`/video/${videoId}`);
-    },
-    [router],
-  );
-
   const formContainerClassName = useMemo(() => {
     const classes = [styles.formContainer];
 
@@ -179,34 +170,7 @@ export default function Home() {
 
           {(isSearched || hasStoredSearch) && !!videosList.length && (
             <div className={styles.videoCardsContainer}>
-              {videosList.map(video => (
-                <Card key={video.key} className={styles.videoCard}>
-                  <CardMedia
-                    image={video.snippet.thumbnails.high.url}
-                    title={video.snippet.title}
-                    className={styles.videoCardMedia}
-                  />
-
-                  <CardContent className={styles.videoCardContent}>
-                    <h1>{video.snippet.title}</h1>
-                    <h2>{video.snippet.channelTitle}</h2>
-                    <p>{video.snippet.description}</p>
-                  </CardContent>
-
-                  <CardActions>
-                    <Button
-                      size="small"
-                      color="primary"
-                      variant="text"
-                      onClick={() => {
-                        handleNavigateToVideoDetails(video.id.videoId);
-                      }}
-                    >
-                      Detalhes do video
-                    </Button>
-                  </CardActions>
-                </Card>
-              ))}
+              {videosList.map(video => <VideoCard key={video.key} video={video} />)}
 
               <Card ref={loadMoreVideosElementRef} className={styles.videoCard}>
                 <VideoCardSkeleton />
