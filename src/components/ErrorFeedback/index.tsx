@@ -6,7 +6,7 @@ import styles from './styles.module.scss';
 interface ErrorFeedbackProps {
   title: string;
   message: string;
-  retryCallback: () => void | Promise<void>;
+  retryCallback?: () => void | Promise<void>;
   showGoBackButton?: boolean;
 }
 
@@ -25,13 +25,15 @@ export function ErrorFeedback({ title, message, retryCallback, showGoBackButton 
 
       <span>{message}</span>
       
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={retryCallback}
-      >
-        Tentar novamente
-      </Button>
+      {!!retryCallback && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={retryCallback}
+        >
+          Tentar novamente
+        </Button>
+      )}
 
       {!!showGoBackButton && (
         <Button variant="text" onClick={handleGoBack}>

@@ -8,6 +8,7 @@ interface VideosListContextData {
   videosList: VideoWithKey[];
   searchedTerm: string;
   nextPageToken: string;
+  hasStoredSearch: boolean;
   setNewVideosList(videos: Video[]): void;
   addVideos(videos: Video[]): void;
   updateSearchedTerm(term: string): void;
@@ -22,30 +23,21 @@ function VideosListProvider ({ children }) {
   const [videosList, setVideosList] = useState<VideoWithKey[]>([]);
   const [searchedTerm, setSearchedTerm] = useState('');
   const [nextPageToken, setNextPageToken] = useState('');
+  const [hasStoredSearch, setHasStoredSearch] = useState(false);
 
   const loadStoredVideos = () => {
     const storedVideos = sessionStorage.getItem('@Teste_iCasei/videos-list');
-
-    if (storedVideos) {
-      setVideosList(JSON.parse(storedVideos));
-    }
-
-    setVideosList([]);
+    setVideosList(storedVideos ? JSON.parse(storedVideos) : []);
   };
 
   const loadStoredSearchedTerm = () => {
-    const storedSearchedTerm = sessionStorage.getItem(
-      '@Teste_iCasei/searched-term',
-    );
-
+    const storedSearchedTerm = sessionStorage.getItem('@Teste_iCasei/searched-term');
     setSearchedTerm(storedSearchedTerm || '');
+    setHasStoredSearch(!!storedSearchedTerm);
   };
 
   const loadStoredNextPageToken = () => {
-    const storedNextPageTokenn = sessionStorage.getItem(
-      '@Teste_iCasei/next-page-token',
-    );
-
+    const storedNextPageTokenn = sessionStorage.getItem('@Teste_iCasei/next-page-token');
     setNextPageToken(storedNextPageTokenn || '');
   };
 
@@ -101,6 +93,7 @@ function VideosListProvider ({ children }) {
         videosList,
         searchedTerm,
         nextPageToken,
+        hasStoredSearch,
         setNewVideosList,
         addVideos,
         updateSearchedTerm,

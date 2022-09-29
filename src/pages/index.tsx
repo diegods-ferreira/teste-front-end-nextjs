@@ -17,6 +17,7 @@ import { useVideosList } from '../contexts/VideoListContext';
 
 import { Video } from '../data/models/video';
 
+import { ErrorFeedback } from '../components/ErrorFeedback';
 import { VideoCardSkeleton } from '../components/skeletons/VideoCardSkeleton';
 
 import styles from './home.module.scss';
@@ -33,6 +34,7 @@ export default function Home() {
     videosList,
     searchedTerm,
     nextPageToken,
+    hasStoredSearch,
     setNewVideosList,
     addVideos,
     updateSearchedTerm,
@@ -64,7 +66,6 @@ export default function Home() {
         return;
       }
 
-      setShouldAnimateSearchForm(true);
       setIsLoading(true);
 
       try {
@@ -80,6 +81,7 @@ export default function Home() {
 
         updateNextPageToken(nextPageToken);
 
+        setShouldAnimateSearchForm(true);
         setIsSearched(true);
       } catch (err) {
         toast('Erro ao pesquisar.', { type: 'error' });
@@ -127,22 +129,18 @@ export default function Home() {
   const formContainerClassName = useMemo(() => {
     const classes = [styles.formContainer];
 
-    if (shouldAnimateSearchForm) {
+    if (shouldAnimateSearchForm || hasStoredSearch) {
       classes.push(styles.animate);
     }
 
     return classes.join(' ');
-  }, [shouldAnimateSearchForm]);
+  }, [hasStoredSearch, shouldAnimateSearchForm]);
 
   useEffect(() => {
     if (isLoadMoreVideosElementInView && !isLoadingMore) {
       loadMoreVideos();
     }
   }, [isLoadMoreVideosElementInView, isLoadingMore, loadMoreVideos]);
-
-  useEffect(() => {
-    setIsSearched(!!videosList.length);
-  }, [videosList]);
 
   useEffect(() => {
     setShouldAnimateSearchForm(isSearched);
@@ -172,15 +170,14 @@ export default function Home() {
             </Paper>
           </div>
 
-          {isSearched && !videosList.length && (
-            <div className={styles.noVideoFoundContainer}>
-              <img src="/images/not-found.png" alt="Not found" />
-              <strong>Não encontramos vídeos com o termo buscado.</strong>
-              <span>Utilize outras palavras-chave.</span>
-            </div>
+          {(isSearched || hasStoredSearch) && !videosList.length && (
+            <ErrorFeedback
+              title="Não encontramos vídeos com o termo buscado."
+              message="Utilize outras palavras-chave."
+            />
           )}
 
-          {isSearched && !!videosList.length && (
+          {(isSearched || hasStoredSearch) && !!videosList.length && (
             <div className={styles.videoCardsContainer}>
               {videosList.map(video => (
                 <Card key={video.key} className={styles.videoCard}>
