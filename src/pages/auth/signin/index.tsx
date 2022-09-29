@@ -15,6 +15,8 @@ import { authOptions } from '../../api/auth/[...nextauth]';
 
 import { EMAIL_REGEX } from '../../../data/contants/email-regex';
 
+import { useVideosList } from '../../../contexts/VideoListContext';
+
 import { ControlledTextField } from '../../../components/ControlledTextField';
 
 import styles from './styles.module.scss';
@@ -40,6 +42,8 @@ const signInFormValidationSchema = yup
 export default function SignIn() {
   const router = useRouter();
 
+  const { resetVideoSearch } = useVideosList();
+
   const [isSubmiting, setIsSubmiting] = useState(false);
 
   const signInForm = useForm<SignInFormData>({
@@ -62,6 +66,7 @@ export default function SignIn() {
         toast(result.error, { type: 'error' });
       }
     } else {
+      resetVideoSearch();
       router.push(result.url);
     }
   };

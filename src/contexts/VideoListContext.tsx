@@ -13,6 +13,7 @@ interface VideosListContextData {
   addVideos(videos: Video[]): void;
   updateSearchedTerm(term: string): void;
   updateNextPageToken(token: string): void;
+  resetVideoSearch(): void;
 }
 
 const VideosListContext = createContext<VideosListContextData>(
@@ -81,6 +82,19 @@ function VideosListProvider ({ children }) {
     sessionStorage.setItem('@Teste_iCasei/next-page-token', token);
   }, []);
 
+  const resetVideoSearch = useCallback(() => {
+    sessionStorage.removeItem('@Teste_iCasei/videos-list');
+    setVideosList([]);
+
+    sessionStorage.removeItem('@Teste_iCasei/searched-term');
+    setSearchedTerm('');
+
+    sessionStorage.removeItem('@Teste_iCasei/next-page-token');
+    setNextPageToken('');
+
+    setHasStoredSearch(false);
+  }, []);
+
   useEffect(() => {
     loadStoredVideos();
     loadStoredSearchedTerm();
@@ -98,6 +112,7 @@ function VideosListProvider ({ children }) {
         addVideos,
         updateSearchedTerm,
         updateNextPageToken,
+        resetVideoSearch
       }}
     >
       {children}
