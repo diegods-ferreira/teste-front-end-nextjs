@@ -7,6 +7,7 @@ import { Backdrop, Box, Card, CircularProgress, IconButton } from '@mui/material
 import { Search } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useInView } from 'react-intersection-observer';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { authOptions } from './api/auth/[...nextauth]';
 
@@ -44,10 +45,54 @@ export default function Home() {
   });
 
   const [isSearched, setIsSearched] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [showErrorFeedback, setShowErrorFeedback] = useState(false);
   const [shouldAnimateSearchForm, setShouldAnimateSearchForm] = useState(false);
+
+  const getVideos = useCallback(async (page: number) => {
+    if (!searchedTerm) {
+      return;
+    }
+
+    const params: Record<string, string> = { searchedTerm };
+
+    if (page > 1) {
+      params.pageToken = nextPageToken;
+    }
+
+    const response = await api.get<ApiGetVideosResponse>('/videos', { params });
+
+    if (page > 1) {
+      addVideos(response.data.videos.map(video => ({
+        ...video,
+        key: `${nextPageToken}__${video.id.videoId}`,
+      })));
+    } else {
+      setNewVideosList(response.data.videos.map(video => ({
+        ...video,
+        key: video.id.videoId
+      })));
+    }
+
+    updateNextPageToken(response.data.nextPageToken);
+
+    setIsSearched(true);
+
+    return response.data.videos;
+  }, [addVideos, nextPageToken, searchedTerm, setNewVideosList, updateNextPageToken]);
+
+  const videosQuery = useInfiniteQuery(
+    ['videos-list'],
+    ({ pageParam = 1 }) => getVideos(pageParam),
+    {
+      enabled: isSearched,
+      getNextPageParam: (lastPage: any, allPages) => {
+        return (lastPage?.data?.length || 0) <= 9 ? allPages.length + 1 : undefined;
+      },
+      onError: (err: any) => {
+        toast(err.response.data.message, { type: 'error' });
+        console.log(err.response.data);
+      }
+    }
+  );
 
   const handleSearchTermInputTextChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -55,39 +100,6 @@ export default function Home() {
     },
     [updateSearchedTerm],
   );
-
-  const loadVideos = useCallback(async () => {
-    if (!searchedTerm) {
-      toast('É preciso preencher o campo de pesquisa.', { type: 'warning' });
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const response = await api.get<ApiGetVideosResponse>('/videos', {
-        params: { searchedTerm }
-      });
-
-      const { videos, nextPageToken } = response.data;
-
-      setNewVideosList(
-        videos.map(video => ({ ...video, key: video.id.videoId })),
-      );
-
-      updateNextPageToken(nextPageToken);
-
-      setShouldAnimateSearchForm(true);
-      setIsSearched(true);
-      setShowErrorFeedback(false);
-    } catch (err) {
-      toast(err.response.data.message, { type: 'error' });
-      setShowErrorFeedback(true);
-      console.log(err.response.data);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchedTerm, setNewVideosList, updateNextPageToken]);
 
   const handleSearchFormSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -98,44 +110,29 @@ export default function Home() {
         return;
       }
 
-      loadVideos();
+      videosQuery.refetch();
     },
-    [searchedTerm, loadVideos],
+    [searchedTerm, videosQuery],
   );
 
-  const loadMoreVideos = useCallback(async () => {
-    setIsLoadingMore(true);
-
-    try {
-      const response = await api.get<ApiGetVideosResponse>('/videos', {
-        params: { searchedTerm, pageToken: nextPageToken }
-      });
-
-      addVideos(
-        response.data.videos.map(video => ({
-          ...video,
-          key: `${nextPageToken}__${video.id.videoId}`,
-        })),
-      );
-
-      updateNextPageToken(response.data.nextPageToken);
-
-      setIsSearched(true);
-      setShowErrorFeedback(false);
-    } catch (err) {
-      toast(err.response.data.message, { type: 'error' });
-      setShowErrorFeedback(true);
-      console.log(err.response.data);
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [addVideos, nextPageToken, searchedTerm, updateNextPageToken]);
-
   useEffect(() => {
-    if (isLoadMoreVideosElementInView && !isLoadingMore) {
-      loadMoreVideos();
+    if (
+      isLoadMoreVideosElementInView &&
+      !videosQuery.isLoading &&
+      !videosQuery.isFetching &&
+      !videosQuery.isFetchingNextPage &&
+      nextPageToken
+    ) {
+      videosQuery.fetchNextPage();
     }
-  }, [isLoadMoreVideosElementInView, isLoadingMore, loadMoreVideos]);
+  }, [
+    isLoadMoreVideosElementInView,
+    nextPageToken,
+    videosQuery.isLoading,
+    videosQuery.isFetching,
+    videosQuery.isFetchingNextPage,
+    videosQuery.fetchNextPage
+  ]);
 
   useEffect(() => {
     setIsSearched(!!videosList.length);
@@ -162,8 +159,14 @@ export default function Home() {
                   value={searchedTerm || ''}
                 />
 
-                <IconButton type="submit" aria-label="search">
-                  <Search />
+                <IconButton
+                  type="submit"
+                  aria-label="search"
+                  disabled={videosQuery.isFetching || videosQuery.isFetchingNextPage}
+                >
+                  {videosQuery.isFetching || videosQuery.isFetchingNextPage
+                    ? <CircularProgress color="inherit" size="1.5rem" />
+                    : <Search />}
                 </IconButton>
               </S.SearchForm__Form>
             </S.SearchForm__Wrapper>
@@ -181,29 +184,29 @@ export default function Home() {
               <S.VideoCardsGrid>
                 {videosList.map(video => <VideoCard key={video.key} video={video} />)}
 
-                {isLoadingMore && !showErrorFeedback && (
+                {videosQuery.isFetchingNextPage && !videosQuery.isError && (
                   <Card>
                     <VideoCardSkeleton />
                   </Card>
                 )}
               </S.VideoCardsGrid>
 
-              {!isLoadingMore && !showErrorFeedback && (
+              {!videosQuery.isFetchingNextPage && !videosQuery.isError && (
                 <Box ref={loadMoreVideosElementRef} sx={{ height: '2rem' }} />
               )}
 
-              {!!showErrorFeedback && (
+              {!!videosQuery.isError && (
                 <ErrorFeedback
                   title="Ocorreu um erro."
                   message="Não foi possível buscar os vídeos."
-                  retryCallback={videosList.length ? loadMoreVideos : loadVideos}
+                  retryCallback={videosList.length ? videosQuery.fetchNextPage : videosQuery.refetch}
                 />
               )}
             </>
           )}
         </S.InnerContainer>
 
-        <Backdrop style={{ zIndex: 1 }} open={isLoading}>
+        <Backdrop style={{ zIndex: 1 }} open={videosQuery.isLoading && isSearched}>
           <CircularProgress color="primary" />
         </Backdrop>
       </S.Container>
