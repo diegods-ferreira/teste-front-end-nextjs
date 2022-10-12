@@ -1,5 +1,16 @@
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { AppBar, Button, Toolbar } from '@mui/material';
+
+const appearFromUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 export const Container = styled(AppBar).attrs({
   component: 'header',
@@ -8,6 +19,8 @@ export const Container = styled(AppBar).attrs({
   padding-bottom: 1rem;
   height: 6rem;
   justify-content: flex-end;
+
+  animation: ${appearFromUp} 0.5s;
 
   @media (min-width: 769px) {
     height: 7rem;
