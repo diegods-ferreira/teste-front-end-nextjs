@@ -6,7 +6,7 @@ import * as S from './styles';
 interface ErrorFeedbackProps {
   title: string;
   message: string;
-  retryCallback?: () => void | Promise<void>;
+  retryCallback?: () => any | Promise<any>;
   showGoBackButton?: boolean;
 }
 

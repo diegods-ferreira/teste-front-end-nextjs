@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { unstable_getServerSession } from 'next-auth';
 import { useRouter } from 'next/router';
@@ -6,6 +6,7 @@ import Head from 'next/head';
 import { AccordionDetails, AccordionSummary, IconButton, Typography } from '@mui/material';
 import { ArrowBack, ExpandMore, RemoveRedEye, ThumbDown, ThumbUp } from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import { useQuery } from '@tanstack/react-query';
 
 import { authOptions } from '../api/auth/[...nextauth]';
 
@@ -18,28 +19,32 @@ import { VideoDetailsSkeleton } from '../../components/skeletons/VideoDetailsSke
 
 import * as S from './styles';
 
+type VideoDetails = Omit<Video, 'id'> & {
+  id: string;
+  url: string;
+};
+
 export default function VideoDetails() {
   const router = useRouter();
 
-  const [video, setVideo] = useState<Video>({} as Video);
-  const [displayVideoInfo, setDisplayVideoInfo] = useState(false);
-  const [displayErrorMessage, setDisplayErrorMessage] = useState(false);
+  const [video, setVideo] = useState<VideoDetails | null>(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  const fetchVideoInfoFromYoutubeApi = useCallback(async () => {
-    setDisplayVideoInfo(false);
-
-    try {
-      const response = await api.get<Video>(`/videos/${router.query.videoId}`);
-
-      setVideo(response.data);
-      setDisplayVideoInfo(!!response.data);
-    } catch (err) {
-      toast(err.response.data.message, { type: 'error' });
-      setDisplayVideoInfo(false);
-      setDisplayErrorMessage(true);
-    }
+  const getVideoData = useCallback(async () => {
+    const response = await api.get<VideoDetails>(`/videos/${router.query.videoId}`);
+    return response.data;
   }, [router.query.videoId]);
+
+  const videoDataQuery = useQuery<VideoDetails>(['videoData', router.query.videoId], async () => getVideoData(), {
+    enabled: !!router.query?.videoId,
+    onSuccess: (video) => {
+      const url = `https://www.youtube.com/embed/${video.id}`;
+      setVideo({ ...video, url });
+    },
+    onError: (err: any) => {
+      toast(err.response.data.message, { type: 'error' });
+    }
+  });
 
   const handleToggleDescriptionAccordion = useCallback(
     (_: any, expanded: boolean) => {
@@ -52,105 +57,101 @@ export default function VideoDetails() {
     router.back();
   }, [router]);
 
-  useEffect(() => {
-    fetchVideoInfoFromYoutubeApi();
-  }, [fetchVideoInfoFromYoutubeApi]);
-
-  const videoUrl = useMemo(() => `https://www.youtube.com/embed/${video.id}`, [
-    video.id,
-  ]);
-
-  if (displayErrorMessage) {
-    return (
-      <ErrorFeedback
-        title="Ops..."
-        message="Ocorreu um erro ao carregar os detalhes do vídeo."
-        retryCallback={fetchVideoInfoFromYoutubeApi}
-        showGoBackButton
-      />
-    );
-  }
-
   return (
     <>
       <Head>
         <title>Detalhes do vídeo</title>
       </Head>
 
-      {displayVideoInfo ? (
-        <>
-          <S.VideoTitle>
-            <IconButton
-              size="large"
-              color="inherit"
-              aria-label="go-back"
-              onClick={handleNavigateBack}
-            >
-              <ArrowBack />
-            </IconButton>
+      {(() => {
+        if (videoDataQuery.isLoading || videoDataQuery.isFetching) {
+          return <VideoDetailsSkeleton />;
+        }
 
-            <Typography variant="h5" aria-label="video-title">
-              {video.snippet.title}
-            </Typography>
-          </S.VideoTitle>
+        if (videoDataQuery.isError || (videoDataQuery.isSuccess && !video)) {
+          return (
+            <ErrorFeedback
+              title="Ops..."
+              message="Ocorreu um erro ao carregar os detalhes do vídeo."
+              retryCallback={videoDataQuery.refetch}
+              showGoBackButton
+            />
+          );
+        }
 
-          <S.Container>
-            <S.VideoPlayer>
-              <iframe
-                title="youtube-video"
-                src={videoUrl}
-                frameBorder="0"
-                allow="accelerometer; autoplay;"
-                allowFullScreen
-              />
-            </S.VideoPlayer>
+        return (
+          <>
+            <S.VideoTitle>
+              <IconButton
+                size="large"
+                color="inherit"
+                aria-label="go-back"
+                onClick={handleNavigateBack}
+              >
+                <ArrowBack />
+              </IconButton>
 
-            <S.VideoMeta animationDelay={0.6}>
-              <h5 aria-label="channel-title">{video.snippet.channelTitle}</h5>
+              <Typography variant="h5" aria-label="video-title">
+                {video.snippet?.title}
+              </Typography>
+            </S.VideoTitle>
 
-              <S.VideoMeta__InteractionCounters>
-                <S.VideoMeta__Statistics aria-label="like-count">
-                  <ThumbUp fontSize="small" color="primary" />
+            <S.Container>
+              <S.VideoPlayer>
+                <iframe
+                  title="youtube-video"
+                  src={video.url}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay;"
+                  allowFullScreen
+                />
+              </S.VideoPlayer>
+
+              <S.VideoMeta animationDelay={0.6}>
+                <h5 aria-label="channel-title">{video.snippet?.channelTitle}</h5>
+
+                <S.VideoMeta__InteractionCounters>
+                  <S.VideoMeta__Statistics aria-label="like-count">
+                    <ThumbUp fontSize="small" color="primary" />
+                    <Typography variant="caption">
+                      {video.statistics.likeCount}
+                    </Typography>
+                  </S.VideoMeta__Statistics>
+
+                  <S.VideoMeta__Statistics aria-label="dislike-count">
+                    <ThumbDown fontSize="small" color="secondary" />
+                    <Typography variant="caption">
+                      {video.statistics.dislikeCount}
+                    </Typography>
+                  </S.VideoMeta__Statistics>
+                </S.VideoMeta__InteractionCounters>
+              </S.VideoMeta>
+
+              <S.VideoDescription
+                expanded={isDescriptionExpanded}
+                onChange={handleToggleDescriptionAccordion}
+              >
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant="body2">Descrição</Typography>
+                </AccordionSummary>
+
+                <AccordionDetails>
+                  <p>{video.snippet?.description}</p>
+                </AccordionDetails>
+              </S.VideoDescription>
+
+              <S.VideoMeta animationDelay={1}>
+                <S.VideoMeta__Statistics aria-label="views-count">
+                  <RemoveRedEye fontSize="small" />
                   <Typography variant="caption">
-                    {video.statistics.likeCount}
+                    {video.statistics.viewCount}
                   </Typography>
                 </S.VideoMeta__Statistics>
-
-                <S.VideoMeta__Statistics aria-label="dislike-count">
-                  <ThumbDown fontSize="small" color="secondary" />
-                  <Typography variant="caption">
-                    {video.statistics.dislikeCount}
-                  </Typography>
-                </S.VideoMeta__Statistics>
-              </S.VideoMeta__InteractionCounters>
-            </S.VideoMeta>
-
-            <S.VideoDescription
-              expanded={isDescriptionExpanded}
-              onChange={handleToggleDescriptionAccordion}
-            >
-              <AccordionSummary expandIcon={<ExpandMore />}>
-                <Typography variant="body2">Descrição</Typography>
-              </AccordionSummary>
-
-              <AccordionDetails>
-                <p>{video.snippet.description}</p>
-              </AccordionDetails>
-            </S.VideoDescription>
-
-            <S.VideoMeta animationDelay={1}>
-              <S.VideoMeta__Statistics aria-label="views-count">
-                <RemoveRedEye fontSize="small" />
-                <Typography variant="caption">
-                  {video.statistics.viewCount}
-                </Typography>
-              </S.VideoMeta__Statistics>
-            </S.VideoMeta>
-          </S.Container>
-        </>
-      ) : (
-        <VideoDetailsSkeleton />
-      )}
+              </S.VideoMeta>
+            </S.Container>
+          </>
+        );
+      })()}
     </>
   );
 }
