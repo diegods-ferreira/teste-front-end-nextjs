@@ -9,7 +9,7 @@ import { VideosListProvider } from '../contexts/VideoListContext';
 
 import { Layout } from '../components/Layout';
 
-import '../styles/global.scss';
+import { GlobalStyle } from '../styles/global';
 
 type MyAppProps = AppProps<{
   session: Session;
@@ -25,6 +25,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: MyAppProps) 
         
         <ToastContainer />
       </VideosListProvider>
+
+      <GlobalStyle />
     </SessionProvider>
   );
 }

@@ -1,9 +1,9 @@
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { unstable_getServerSession } from 'next-auth';
 import Head from 'next/head';
-import { Backdrop, Box, Card, CircularProgress, IconButton, InputBase, Paper } from '@mui/material';
+import { Backdrop, Box, Card, CircularProgress, IconButton } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useInView } from 'react-intersection-observer';
@@ -20,7 +20,7 @@ import { ErrorFeedback } from '../components/ErrorFeedback';
 import { VideoCardSkeleton } from '../components/skeletons/VideoCardSkeleton';
 import { VideoCard } from '../components/VideoCard';
 
-import styles from './home.module.scss';
+import * as S from './styles';
 
 interface ApiGetVideosResponse {
   videos: Video[];
@@ -131,22 +131,15 @@ export default function Home() {
     }
   }, [addVideos, nextPageToken, searchedTerm, updateNextPageToken]);
 
-  const formContainerClassName = useMemo(() => {
-    const classes = [styles.formContainer];
-
-    if (shouldAnimateSearchForm || hasStoredSearch) {
-      classes.push(styles.animate);
-    }
-
-    return classes.join(' ');
-  }, [hasStoredSearch, shouldAnimateSearchForm]);
-
   useEffect(() => {
     if (isLoadMoreVideosElementInView && !isLoadingMore) {
-      console.log('---> load more videos');
       loadMoreVideos();
     }
   }, [isLoadMoreVideosElementInView, isLoadingMore, loadMoreVideos]);
+
+  useEffect(() => {
+    setIsSearched(!!videosList.length);
+  }, [videosList]);
 
   useEffect(() => {
     setShouldAnimateSearchForm(isSearched);
@@ -158,12 +151,12 @@ export default function Home() {
         <title>Lista de vídeos</title>
       </Head>
 
-      <div className={styles.pageContainer}>
-        <div className={styles.innerContainer}>
-          <div className={formContainerClassName}>
-            <Paper sx={{ maxWidth: 560, width: '100%' }}>
-              <form className={styles.form} onSubmit={handleSearchFormSubmit}>
-                <InputBase
+      <S.Container>
+        <S.InnerContainer>
+          <S.SearchForm animateToTop={shouldAnimateSearchForm}>
+            <S.SearchForm__Wrapper>
+              <S.SearchForm__Form onSubmit={handleSearchFormSubmit}>
+                <S.SearchForm__Input
                   placeholder="Pesquisar"
                   onChange={handleSearchTermInputTextChange}
                   value={searchedTerm || ''}
@@ -172,9 +165,9 @@ export default function Home() {
                 <IconButton type="submit" aria-label="search">
                   <Search />
                 </IconButton>
-              </form>
-            </Paper>
-          </div>
+              </S.SearchForm__Form>
+            </S.SearchForm__Wrapper>
+          </S.SearchForm>
 
           {(isSearched || hasStoredSearch) && !videosList.length && (
             <ErrorFeedback
@@ -185,15 +178,15 @@ export default function Home() {
 
           {(isSearched || hasStoredSearch) && !!videosList.length && (
             <>
-              <div className={styles.videoCardsContainer}>
+              <S.VideoCardsGrid>
                 {videosList.map(video => <VideoCard key={video.key} video={video} />)}
 
                 {isLoadingMore && !showErrorFeedback && (
-                  <Card className={styles.videoCard}>
+                  <Card>
                     <VideoCardSkeleton />
                   </Card>
                 )}
-              </div>
+              </S.VideoCardsGrid>
 
               {!isLoadingMore && !showErrorFeedback && (
                 <Box ref={loadMoreVideosElementRef} sx={{ height: '2rem' }} />
@@ -208,12 +201,12 @@ export default function Home() {
               )}
             </>
           )}
-        </div>
+        </S.InnerContainer>
 
         <Backdrop style={{ zIndex: 1 }} open={isLoading}>
           <CircularProgress color="primary" />
         </Backdrop>
-      </div>
+      </S.Container>
     </>
   );
 }

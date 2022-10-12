@@ -1,15 +1,15 @@
-import { Box, Skeleton } from '@mui/material';
+import { Skeleton } from '@mui/material';
 
-import styles from './styles.module.scss';
+import * as S from './styles';
 
 export function VideoDetailsSkeleton() {
   return (
-    <Box className={styles.videoDetailsSkeletonContainer}>
-      <Skeleton variant="rectangular" className={styles.videoEmbedSkeleton} />
+    <S.Container>
+      <S.VideoEmbed />
 
       <Skeleton height="5.5rem" />
       <Skeleton height="5.5rem" />
       <Skeleton height="5.5rem" />
-    </Box>
+    </S.Container>
   );
 }

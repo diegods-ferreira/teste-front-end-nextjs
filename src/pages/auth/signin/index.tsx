@@ -5,7 +5,7 @@ import { unstable_getServerSession } from 'next-auth';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { signIn } from 'next-auth/react';
-import { Button, CircularProgress, Paper } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -19,7 +19,7 @@ import { useVideosList } from '../../../contexts/VideoListContext';
 
 import { ControlledTextField } from '../../../components/ControlledTextField';
 
-import styles from './styles.module.scss';
+import * as S from './styles';
 
 interface SignInFormData {
   username: string;
@@ -75,40 +75,41 @@ export default function SignIn() {
         <title>Login</title>
       </Head>
 
-      <main className={styles.container}>
-        <Paper elevation={3} className={styles.formContainer}>
+      <S.Container>
+        <S.SignInForm>
           <form onSubmit={signInForm.handleSubmit(handleSignInFormSubmit)} noValidate>
-            <img src="/images/logo.png" alt="iCasei" className={styles.logo} />
+            <header>
+              <S.SignInForm__Logo />
 
-            <ControlledTextField
-              name="username"
-              control={signInForm.control}
-              label="Nome de usuário"
-              className={styles.input}
-            />
+              <S.SignInForm__Title>Faça login</S.SignInForm__Title>
+            </header>
 
-            <ControlledTextField
-              name="email"
-              control={signInForm.control}
-              type="email"
-              label="E-mail"
-              helperText="Incorrect entry."
-              className={styles.input}
-            />
+            <main>
+              <ControlledTextField
+                name="username"
+                control={signInForm.control}
+                label="Nome de usuário"
+              />
 
-            <Button
-              type="submit"
-              variant="contained"
-              size="large"
-              className={styles.signInButton}
-              disabled={isSubmiting}
-              startIcon={isSubmiting && <CircularProgress color="inherit" size={16} />}
-            >
-              {isSubmiting ? 'Entrando...' : 'Entrar'}
-            </Button>
+              <ControlledTextField
+                name="email"
+                control={signInForm.control}
+                type="email"
+                label="E-mail"
+              />
+            </main>
+
+            <footer>
+              <S.SignInForm__Button
+                disabled={isSubmiting}
+                startIcon={isSubmiting && <CircularProgress color="inherit" size={16} />}
+              >
+                {isSubmiting ? 'Entrando...' : 'Entrar'}
+              </S.SignInForm__Button>
+            </footer>
           </form>
-        </Paper>
-      </main>
+        </S.SignInForm>
+      </S.Container>
     </>
   );
 }

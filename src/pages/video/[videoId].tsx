@@ -3,7 +3,7 @@ import { GetServerSideProps } from 'next';
 import { unstable_getServerSession } from 'next-auth';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Accordion, AccordionDetails, AccordionSummary, IconButton, Paper, Typography } from '@mui/material';
+import { AccordionDetails, AccordionSummary, IconButton, Typography } from '@mui/material';
 import { ArrowBack, ExpandMore, RemoveRedEye, ThumbDown, ThumbUp } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 
@@ -16,7 +16,7 @@ import { Video } from '../../data/models/video';
 import { ErrorFeedback } from '../../components/ErrorFeedback';
 import { VideoDetailsSkeleton } from '../../components/skeletons/VideoDetailsSkeleton';
 
-import styles from './video-details.module.scss';
+import * as S from './styles';
 
 export default function VideoDetails() {
   const router = useRouter();
@@ -79,7 +79,7 @@ export default function VideoDetails() {
 
       {displayVideoInfo ? (
         <>
-          <div className={styles.videoTitleContainer}>
+          <S.VideoTitle>
             <IconButton
               size="large"
               color="inherit"
@@ -92,10 +92,10 @@ export default function VideoDetails() {
             <Typography variant="h5" aria-label="video-title">
               {video.snippet.title}
             </Typography>
-          </div>
+          </S.VideoTitle>
 
-          <div className={styles.pageContainer}>
-            <div className={styles.videoPlayerContainer}>
+          <S.Container>
+            <S.VideoPlayer>
               <iframe
                 title="youtube-video"
                 src={videoUrl}
@@ -103,51 +103,50 @@ export default function VideoDetails() {
                 allow="accelerometer; autoplay;"
                 allowFullScreen
               />
-            </div>
+            </S.VideoPlayer>
 
-            <Paper elevation={3} className={[styles.videoMetaContainer, styles.delayedAnimation0_6].join(' ')}>
+            <S.VideoMeta animationDelay={0.6}>
               <h5 aria-label="channel-title">{video.snippet.channelTitle}</h5>
 
-              <div className={styles.videoInteractionCounters}>
-                <div className={styles.videoStatistics} aria-label="like-count">
+              <S.VideoMeta__InteractionCounters>
+                <S.VideoMeta__Statistics aria-label="like-count">
                   <ThumbUp fontSize="small" color="primary" />
                   <Typography variant="caption">
                     {video.statistics.likeCount}
                   </Typography>
-                </div>
+                </S.VideoMeta__Statistics>
 
-                <div className={styles.videoStatistics} aria-label="dislike-count">
+                <S.VideoMeta__Statistics aria-label="dislike-count">
                   <ThumbDown fontSize="small" color="secondary" />
                   <Typography variant="caption">
                     {video.statistics.dislikeCount}
                   </Typography>
-                </div>
-              </div>
-            </Paper>
+                </S.VideoMeta__Statistics>
+              </S.VideoMeta__InteractionCounters>
+            </S.VideoMeta>
 
-            <Accordion
-              elevation={3}
+            <S.VideoDescription
               expanded={isDescriptionExpanded}
               onChange={handleToggleDescriptionAccordion}
-              className={styles.videoDescriptionAccordion}
             >
               <AccordionSummary expandIcon={<ExpandMore />}>
                 <Typography variant="body2">Descrição</Typography>
               </AccordionSummary>
+
               <AccordionDetails>
                 <p>{video.snippet.description}</p>
               </AccordionDetails>
-            </Accordion>
+            </S.VideoDescription>
 
-            <Paper elevation={3} className={[styles.videoMetaContainer, styles.delayedAnimation1].join(' ')}>
-              <div className={styles.videoStatistics} aria-label="views-count">
+            <S.VideoMeta animationDelay={1}>
+              <S.VideoMeta__Statistics aria-label="views-count">
                 <RemoveRedEye fontSize="small" />
                 <Typography variant="caption">
                   {video.statistics.viewCount}
                 </Typography>
-              </div>
-            </Paper>
-          </div>
+              </S.VideoMeta__Statistics>
+            </S.VideoMeta>
+          </S.Container>
         </>
       ) : (
         <VideoDetailsSkeleton />
