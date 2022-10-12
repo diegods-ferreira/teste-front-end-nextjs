@@ -8,6 +8,8 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { VideosListProvider } from '../contexts/VideoListContext';
 
+import { usePreserveScroll } from '../hooks/preserve-scroll';
+
 import { Layout } from '../components/Layout';
 
 import { GlobalStyle } from '../styles/global';
@@ -27,6 +29,8 @@ const queryClient = new QueryClient({
 });
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }: MyAppProps) {
+  usePreserveScroll();
+
   return (
     <SessionProvider session={session}>
       <QueryClientProvider client={queryClient}>
