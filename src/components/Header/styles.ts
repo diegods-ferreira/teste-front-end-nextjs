@@ -14,7 +14,7 @@ const appearFromUp = keyframes`
 
 export const Container = styled(AppBar).attrs({
   component: 'header',
-  position: 'static'
+  position: 'sticky'
 })`
   padding-bottom: 1rem;
   height: 6rem;
