@@ -7,11 +7,11 @@ interface SearchFormProps {
 export const Container = styled.div`
   width: 100%;
   min-height: calc(100vh - 6rem);
-  background: var(--background);
+  background: var(--gray-100);
 
-  @media (min-width: 769px) {
+  ${({ theme }) => theme.mixins.screen.whenTablet(css`
     min-height: calc(100vh - 7rem);
-  }
+  `)}
 `;
 
 export const InnerContainer = styled.div`
@@ -65,11 +65,11 @@ export const VideoCardsGrid = styled.div`
   max-width: 1200px;
   margin-top: 1rem;
 
-  @media (min-width: 769px) {
+  ${({ theme }) => theme.mixins.screen.whenTablet(css`
     margin: 1rem auto 0px;
     
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-gap: 1rem;
-  }
+  `)}
 `;

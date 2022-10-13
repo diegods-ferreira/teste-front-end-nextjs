@@ -3,6 +3,7 @@ import { Session } from 'next-auth';
 import { SessionProvider } from 'next-auth/react';
 import { ToastContainer } from 'react-toastify';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from 'styled-components';
 
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -12,7 +13,8 @@ import { usePreserveScroll } from '../hooks/preserve-scroll';
 
 import { Layout } from '../components/Layout';
 
-import { GlobalStyle } from '../styles/global';
+import { GlobalStyle } from '../styles/GlobalStyles';
+import { theme } from '../styles/theme';
 
 type MyAppProps = AppProps<{
   session: Session;
@@ -34,15 +36,17 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: MyAppProps) 
   return (
     <SessionProvider session={session}>
       <QueryClientProvider client={queryClient}>
-        <VideosListProvider>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-          
-          <ToastContainer />
-        </VideosListProvider>
+        <ThemeProvider theme={theme}>
+          <VideosListProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+            
+            <ToastContainer />
+          </VideosListProvider>
 
-        <GlobalStyle />
+          <GlobalStyle theme={theme} />
+        </ThemeProvider>
       </QueryClientProvider>
     </SessionProvider>
   );

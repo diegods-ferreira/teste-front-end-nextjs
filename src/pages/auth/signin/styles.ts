@@ -3,10 +3,10 @@ import { Button, Paper, Typography } from '@mui/material';
 
 const coloredBackgroundAnimation = keyframes`
   from {
-    background: var(--primary);
+    background: var(--blue-500);
   }
   to {
-    background: var(--primary-darker);
+    background: var(--blue-700);
   }
 `;
 
@@ -68,7 +68,7 @@ export const SignInForm__Title = styled(Typography).attrs({
   variant: 'h5',
   component: 'h2'
 })`
-  color: var(--text);
+  color: var(--gray-900);
   margin-top: 1rem;
 `;
 
@@ -76,4 +76,6 @@ export const SignInForm__Button = styled(Button).attrs({
   type: 'submit',
   variant: 'contained',
   size: 'large'
-})``;
+})`
+  background-color: var(--blue-700);
+`;

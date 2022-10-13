@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { Box, Skeleton } from '@mui/material';
 
 export const Container = styled(Box)`
@@ -11,9 +11,9 @@ export const Media = styled(Skeleton).attrs({
   width: 100%;
   height: 160px;
 
-  @media (min-width: 769px) {
+  ${({ theme }) => theme.mixins.screen.whenTablet(css`
     height: 200px;
-  }
+  `)}
 `;
 
 export const Content = styled(Box)`

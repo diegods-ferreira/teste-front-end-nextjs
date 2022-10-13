@@ -1,4 +1,4 @@
-import styled, { keyframes } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { AppBar, Button, Toolbar } from '@mui/material';
 
 const appearFromUp = keyframes`
@@ -18,13 +18,15 @@ export const Container = styled(AppBar).attrs({
 })`
   padding-bottom: 1rem;
   height: 6rem;
+  background-color: var(--blue-700);
+
   justify-content: flex-end;
 
   animation: ${appearFromUp} 0.5s;
 
-  @media (min-width: 769px) {
+  ${({ theme }) => theme.mixins.screen.whenTablet(css`
     height: 7rem;
-  }
+  `)}
 `;
 
 export const ContentContainer = styled(Toolbar)`

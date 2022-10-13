@@ -112,14 +112,14 @@ export default function VideoDetails() {
 
                 <S.VideoMeta__InteractionCounters>
                   <S.VideoMeta__Statistics aria-label="like-count">
-                    <ThumbUp fontSize="small" color="primary" />
+                    <ThumbUp fontSize="small" sx={{ color: 'var(--blue-700)' }} />
                     <Typography variant="caption">
                       {video.statistics.likeCount}
                     </Typography>
                   </S.VideoMeta__Statistics>
 
                   <S.VideoMeta__Statistics aria-label="dislike-count">
-                    <ThumbDown fontSize="small" color="secondary" />
+                    <ThumbDown fontSize="small" color="error" />
                     <Typography variant="caption">
                       {video.statistics.dislikeCount}
                     </Typography>

@@ -26,11 +26,7 @@ export function ErrorFeedback({ title, message, retryCallback, showGoBackButton 
       <span>{message}</span>
       
       {!!retryCallback && (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={retryCallback}
-        >
+        <Button variant="contained" onClick={retryCallback}>
           Tentar novamente
         </Button>
       )}

@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const Container = styled.div`
   width: 100%;
@@ -11,10 +11,10 @@ export const Container = styled.div`
   & > img {
     max-width: 240px;
     width: 100%;
-
-    @media (min-width: 769px) {
+    
+    ${({ theme }) => theme.mixins.screen.whenTablet(css`
       max-width: 360px;
-    }
+    `)}
   }
 
   & > strong {
@@ -23,6 +23,7 @@ export const Container = styled.div`
 
   & > strong,
   & > span {
+    color: var(--gray-900);
     text-align: center;
     margin-top: 12px;
     max-width: 300px;
@@ -30,6 +31,7 @@ export const Container = styled.div`
 
   & > button {
     margin-top: 12px;
+    background-color: var(--blue-700);
 
     & a {
       text-decoration: none;

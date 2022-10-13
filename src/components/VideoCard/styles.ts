@@ -1,4 +1,4 @@
-import styled, { keyframes } from 'styled-components';
+import styled, { css, keyframes } from 'styled-components';
 import { Button, Card, CardContent, CardMedia } from '@mui/material';
 
 const videoCardAppearanceAnimation = keyframes`
@@ -20,23 +20,23 @@ export const Container = styled(Card)`
   & + div {
     margin-top: 12px;
 
-    @media (min-width: 769px) {
+    ${({ theme }) => theme.mixins.screen.whenTablet(css`
       margin-top: 0;
-    }
+    `)}
   }
 `;
 
 export const Media = styled(CardMedia)`
   height: 160px;
 
-  @media (min-width: 993px) {
+  ${({ theme }) => theme.mixins.screen.whenDesktop(css`
     height: 200px;
-  }
+  `)}
 `;
 
 export const Content = styled(CardContent)`
   height: 135px;
-  color: var(--text);
+  color: var(--gray-900);
 
   & > h1 {
     max-width: 100%;
@@ -68,6 +68,7 @@ export const Content = styled(CardContent)`
 
 export const DetailsButton = styled(Button).attrs({
   size: 'small',
-  color: 'primary',
   variant: 'text'
-})``;
+})`
+  color: var(--blue-700);
+`;

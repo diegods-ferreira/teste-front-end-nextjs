@@ -7,6 +7,6 @@ export const TextField = styled(MUITextField).attrs({
   width: 100%;
   
   input {
-    color: var(--text);
+    color: var(--gray-900);
   }
 `;

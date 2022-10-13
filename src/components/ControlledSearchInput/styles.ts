@@ -10,4 +10,8 @@ export const Wrapper = styled(Paper)`
 export const Input = styled(InputBase)`
   flex: 1;
   margin-left: 0.5rem;
+  
+  input {
+    color: var(--gray-900);
+  }
 `;
