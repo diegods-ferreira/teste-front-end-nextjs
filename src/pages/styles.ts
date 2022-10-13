@@ -1,5 +1,4 @@
 import styled, { css, keyframes } from 'styled-components';
-import { InputBase, Paper } from '@mui/material';
 
 interface SearchFormProps {
   animateToTop: boolean;
@@ -17,7 +16,7 @@ export const Container = styled.div`
 
 export const InnerContainer = styled.div`
   width: 100%;
-  padding: 1rem;
+  padding: 1rem 1rem 5rem;
 `;
 
 const formAppearanceAnimation = keyframes`
@@ -56,19 +55,9 @@ export const SearchForm = styled.div<SearchFormProps>`
   `}
 `;
 
-export const SearchForm__Wrapper = styled(Paper)`
-  width: 100%;
-  max-width: 560px;
-`;
-
 export const SearchForm__Form = styled.form`
   width: 100%;
-  display: flex;
-`;
-
-export const SearchForm__Input = styled(InputBase)`
-  flex: 1;
-  margin-left: 1rem;
+  max-width: 560px;
 `;
 
 export const VideoCardsGrid = styled.div`
