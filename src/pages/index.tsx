@@ -131,6 +131,7 @@ export default function Home() {
       isLoadMoreVideosElementInView &&
       fetchStatus !== 'FETCHING' &&
       fetchStatus !== 'FETCHING_NEXT_PAGE' &&
+      fetchStatus !== 'ERROR' &&
       nextPageToken
     ) {
       getVideos({
@@ -145,8 +146,12 @@ export default function Home() {
   }, [searchForm, searchedTerm]);
 
   useEffect(() => {
-    setIsSearched(!!videosList.length);
-  }, [videosList]);
+    const hasStoredSearchWithNoResult = hasStoredSearch && !videosList.length;
+    const hasSearchedWithNoResult = fetchStatus === 'SUCCESS' && !videosList.length;
+    const hasSearchedWithResult = !!videosList.length;
+
+    setIsSearched(hasStoredSearchWithNoResult || hasSearchedWithNoResult || hasSearchedWithResult);
+  }, [fetchStatus, hasStoredSearch, videosList.length]);
 
   useEffect(() => {
     setShouldAnimateSearchForm(isSearched);
