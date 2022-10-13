@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { unstable_getServerSession } from 'next-auth';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { AccordionDetails, AccordionSummary, IconButton, Typography } from '@mui/material';
@@ -8,7 +7,7 @@ import { ArrowBack, ExpandMore, RemoveRedEye, ThumbDown, ThumbUp } from '@mui/ic
 import { toast } from 'react-toastify';
 import { useQuery } from '@tanstack/react-query';
 
-import { authOptions } from '../api/auth/[...nextauth]';
+import { requireAuthentication } from '../../hocs/require-authentication';
 
 import { api } from '../../services/api';
 
@@ -156,19 +155,8 @@ export default function VideoDetails() {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const session = await unstable_getServerSession(req, res, authOptions);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/auth/signin',
-        permanent: false,
-      },
-    };
-  }
-
+export const getServerSideProps: GetServerSideProps = requireAuthentication(async () => {
   return {
     props: {}
   };
-}
+});

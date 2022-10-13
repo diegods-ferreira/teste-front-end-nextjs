@@ -1,7 +1,6 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { unstable_getServerSession } from 'next-auth';
 import Head from 'next/head';
 import { Backdrop, Box, Card, CircularProgress } from '@mui/material';
 import { Search } from '@mui/icons-material';
@@ -9,7 +8,7 @@ import { toast } from 'react-toastify';
 import { useInView } from 'react-intersection-observer';
 import { useForm } from 'react-hook-form';
 
-import { authOptions } from './api/auth/[...nextauth]';
+import { requireAuthentication } from '../hocs/require-authentication';
 
 import { api } from '../services/api';
 
@@ -218,19 +217,8 @@ export default function Home() {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const session = await unstable_getServerSession(req, res, authOptions);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/auth/signin',
-        permanent: false,
-      },
-    };
-  }
-
+export const getServerSideProps: GetServerSideProps = requireAuthentication(async () => {
   return {
     props: {}
   };
-}
+});
