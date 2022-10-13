@@ -1,7 +1,7 @@
-import { TextField, TextFieldProps, Typography } from '@mui/material';
+import { TextFieldProps } from '@mui/material';
 import { FieldValues, useController, UseControllerProps } from 'react-hook-form';
 
-import styles from './styles.module.scss';
+import * as S from './styles';
 
 type Props = TextFieldProps & {
   label?: string;
@@ -15,7 +15,6 @@ export function ControlledTextField<T extends FieldValues>({
   placeholder,
   type,
   variant = 'outlined',
-  className,
   helperText,
   ...controllerProps
 }: ControlledTextFieldProps<T>) {
@@ -25,7 +24,7 @@ export function ControlledTextField<T extends FieldValues>({
   } = useController(controllerProps);
 
   return (
-    <TextField
+    <S.TextField
       id={controllerProps.name}
       type={type}
       label={label}
@@ -33,7 +32,6 @@ export function ControlledTextField<T extends FieldValues>({
       variant={variant}
       error={!!error?.message}
       helperText={error?.message}
-      className={[styles.input, className].join(' ')}
       {...inputProps}
     />
   );

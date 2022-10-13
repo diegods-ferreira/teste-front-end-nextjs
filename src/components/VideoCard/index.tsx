@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { Button, Card, CardActions, CardContent, CardMedia } from '@mui/material';
+import { CardActions } from '@mui/material';
 
 import { Video } from '../../data/models/video';
 
-import styles from './styles.module.scss';
+import * as S from './styles';
 
 interface VideoCardProps {
   video: Video;
@@ -13,39 +13,28 @@ interface VideoCardProps {
 export function VideoCard({ video }: VideoCardProps) {
   const router = useRouter();
 
-  const handleNavigateToVideoDetails = useCallback(
-    (videoId: string) => {
-      router.push(`/video/${videoId}`);
-    },
-    [router],
-  );
+  const handleNavigateToVideoDetails = useCallback(() => {
+    router.push(`/video/${video.id.videoId}`);
+  }, [router, video.id.videoId]);
 
   return (
-    <Card className={styles.videoCard}>
-      <CardMedia
+    <S.Container>
+      <S.Media
         image={video.snippet.thumbnails.high.url}
         title={video.snippet.title}
-        className={styles.videoCardMedia}
       />
 
-      <CardContent className={styles.videoCardContent}>
+      <S.Content>
         <h1>{video.snippet.title}</h1>
         <h2>{video.snippet.channelTitle}</h2>
         <p>{video.snippet.description}</p>
-      </CardContent>
+      </S.Content>
 
       <CardActions>
-        <Button
-          size="small"
-          color="primary"
-          variant="text"
-          onClick={() => {
-            handleNavigateToVideoDetails(video.id.videoId);
-          }}
-        >
+        <S.DetailsButton onClick={handleNavigateToVideoDetails}>
           Detalhes do video
-        </Button>
+        </S.DetailsButton>
       </CardActions>
-    </Card>
+    </S.Container>
   );
 }

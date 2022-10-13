@@ -1,4 +1,6 @@
-.errorFeedbackContainer {
+import styled, { css } from 'styled-components';
+
+export const Container = styled.div`
   width: 100%;
 
   display: flex;
@@ -9,10 +11,10 @@
   & > img {
     max-width: 240px;
     width: 100%;
-
-    @media (min-width: 769px) {
+    
+    ${({ theme }) => theme.mixins.screen.whenTablet(css`
       max-width: 360px;
-    }
+    `)}
   }
 
   & > strong {
@@ -21,6 +23,7 @@
 
   & > strong,
   & > span {
+    color: var(--gray-900);
     text-align: center;
     margin-top: 12px;
     max-width: 300px;
@@ -28,9 +31,10 @@
 
   & > button {
     margin-top: 12px;
+    background-color: var(--blue-700);
 
     & a {
       text-decoration: none;
     }
   }
-}
+`;

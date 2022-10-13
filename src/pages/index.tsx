@@ -1,14 +1,14 @@
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
-import { unstable_getServerSession } from 'next-auth';
 import Head from 'next/head';
-import { Backdrop, Box, Card, CircularProgress, IconButton, InputBase, Paper } from '@mui/material';
+import { Backdrop, Box, Card, CircularProgress } from '@mui/material';
 import { Search } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import { useInView } from 'react-intersection-observer';
+import { useForm } from 'react-hook-form';
 
-import { authOptions } from './api/auth/[...nextauth]';
+import { requireAuthentication } from '../hocs/require-authentication';
 
 import { api } from '../services/api';
 
@@ -16,16 +16,28 @@ import { useVideosList } from '../contexts/VideoListContext';
 
 import { Video } from '../data/models/video';
 
+import { ControlledSearchInput } from '../components/ControlledSearchInput';
 import { ErrorFeedback } from '../components/ErrorFeedback';
 import { VideoCardSkeleton } from '../components/skeletons/VideoCardSkeleton';
 import { VideoCard } from '../components/VideoCard';
 
-import styles from './home.module.scss';
+import * as S from './styles';
+
+interface GetVideosParams {
+  searchTerm: string;
+  pageToken?: string;
+}
 
 interface ApiGetVideosResponse {
   videos: Video[];
   nextPageToken: string;
 }
+
+interface SearchFormData {
+  searchTerm: string;
+}
+
+type FetchStatus = 'IDLE' | 'FETCHING' | 'FETCHING_NEXT_PAGE' | 'SUCCESS' | 'ERROR';
 
 export default function Home() {
   const {
@@ -36,7 +48,7 @@ export default function Home() {
     setNewVideosList,
     addVideos,
     updateSearchedTerm,
-    updateNextPageToken,
+    updateNextPageToken
   } = useVideosList();
 
   const { ref: loadMoreVideosElementRef, inView: isLoadMoreVideosElementInView } = useInView({
@@ -44,109 +56,102 @@ export default function Home() {
   });
 
   const [isSearched, setIsSearched] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [showErrorFeedback, setShowErrorFeedback] = useState(false);
   const [shouldAnimateSearchForm, setShouldAnimateSearchForm] = useState(false);
+  const [fetchStatus, setFetchStatus] = useState<FetchStatus>('IDLE');
 
-  const handleSearchTermInputTextChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      updateSearchedTerm(event.target.value);
-    },
-    [updateSearchedTerm],
-  );
+  const searchForm = useForm<SearchFormData>({
+    defaultValues: { searchTerm: searchedTerm || '' }
+  });
 
-  const loadVideos = useCallback(async () => {
-    if (!searchedTerm) {
-      toast('É preciso preencher o campo de pesquisa.', { type: 'warning' });
+  const getVideos = useCallback(async ({ searchTerm, pageToken }: GetVideosParams) => {
+    if (
+      !searchTerm ||
+      fetchStatus === 'FETCHING' ||
+      fetchStatus === 'FETCHING_NEXT_PAGE'
+    ) {
       return;
     }
 
-    setIsLoading(true);
+    const params: Record<string, string> = { searchedTerm: searchTerm };
+
+    if (pageToken) {
+      params.pageToken = pageToken;
+    }
+
+    setFetchStatus(pageToken ? 'FETCHING_NEXT_PAGE' : 'FETCHING');
 
     try {
-      const response = await api.get<ApiGetVideosResponse>('/videos', {
-        params: { searchedTerm }
-      });
+      const response = await api.get<ApiGetVideosResponse>('/videos', { params });
 
-      const { videos, nextPageToken } = response.data;
+      if (pageToken) {
+        addVideos(response.data.videos.map(video => ({
+          ...video,
+          key: `${pageToken}__${video.id.videoId}`,
+        })));
+      } else {
+        setNewVideosList(response.data.videos.map(video => ({
+          ...video,
+          key: video.id.videoId
+        })));
+      }
 
-      setNewVideosList(
-        videos.map(video => ({ ...video, key: video.id.videoId })),
-      );
+      if (response.data.nextPageToken) {
+        updateNextPageToken(response.data.nextPageToken);
+      } else {
+        updateNextPageToken('');
+      }
 
-      updateNextPageToken(nextPageToken);
-
-      setShouldAnimateSearchForm(true);
       setIsSearched(true);
-      setShowErrorFeedback(false);
+
+      setFetchStatus('SUCCESS');
     } catch (err) {
       toast(err.response.data.message, { type: 'error' });
-      setShowErrorFeedback(true);
       console.log(err.response.data);
-    } finally {
-      setIsLoading(false);
+
+      setFetchStatus('ERROR');
     }
-  }, [searchedTerm, setNewVideosList, updateNextPageToken]);
+  }, [addVideos, fetchStatus, setNewVideosList, updateNextPageToken]);
 
   const handleSearchFormSubmit = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-
-      if (!searchedTerm) {
+    async ({ searchTerm }: SearchFormData) => {
+      if (!searchTerm) {
         toast('É preciso preencher o campo de pesquisa.', { type: 'warning' });
         return;
       }
 
-      loadVideos();
+      updateSearchedTerm(searchTerm);
+
+      await getVideos({ searchTerm });
     },
-    [searchedTerm, loadVideos],
+    [getVideos, updateSearchedTerm],
   );
 
-  const loadMoreVideos = useCallback(async () => {
-    setIsLoadingMore(true);
-
-    try {
-      const response = await api.get<ApiGetVideosResponse>('/videos', {
-        params: { searchedTerm, pageToken: nextPageToken }
+  useEffect(() => {
+    if (
+      isLoadMoreVideosElementInView &&
+      fetchStatus !== 'FETCHING' &&
+      fetchStatus !== 'FETCHING_NEXT_PAGE' &&
+      fetchStatus !== 'ERROR' &&
+      nextPageToken
+    ) {
+      getVideos({
+        searchTerm: searchedTerm,
+        pageToken: nextPageToken
       });
-
-      addVideos(
-        response.data.videos.map(video => ({
-          ...video,
-          key: `${nextPageToken}__${video.id.videoId}`,
-        })),
-      );
-
-      updateNextPageToken(response.data.nextPageToken);
-
-      setIsSearched(true);
-      setShowErrorFeedback(false);
-    } catch (err) {
-      toast(err.response.data.message, { type: 'error' });
-      setShowErrorFeedback(true);
-      console.log(err.response.data);
-    } finally {
-      setIsLoadingMore(false);
     }
-  }, [addVideos, nextPageToken, searchedTerm, updateNextPageToken]);
-
-  const formContainerClassName = useMemo(() => {
-    const classes = [styles.formContainer];
-
-    if (shouldAnimateSearchForm || hasStoredSearch) {
-      classes.push(styles.animate);
-    }
-
-    return classes.join(' ');
-  }, [hasStoredSearch, shouldAnimateSearchForm]);
+  }, [isLoadMoreVideosElementInView, fetchStatus, nextPageToken, getVideos, searchedTerm]);
 
   useEffect(() => {
-    if (isLoadMoreVideosElementInView && !isLoadingMore) {
-      console.log('---> load more videos');
-      loadMoreVideos();
-    }
-  }, [isLoadMoreVideosElementInView, isLoadingMore, loadMoreVideos]);
+    searchForm.setValue('searchTerm', searchedTerm)
+  }, [searchForm, searchedTerm]);
+
+  useEffect(() => {
+    const hasStoredSearchWithNoResult = hasStoredSearch && !videosList.length;
+    const hasSearchedWithNoResult = fetchStatus === 'SUCCESS' && !videosList.length;
+    const hasSearchedWithResult = !!videosList.length;
+
+    setIsSearched(hasStoredSearchWithNoResult || hasSearchedWithNoResult || hasSearchedWithResult);
+  }, [fetchStatus, hasStoredSearch, videosList.length]);
 
   useEffect(() => {
     setShouldAnimateSearchForm(isSearched);
@@ -158,23 +163,22 @@ export default function Home() {
         <title>Lista de vídeos</title>
       </Head>
 
-      <div className={styles.pageContainer}>
-        <div className={styles.innerContainer}>
-          <div className={formContainerClassName}>
-            <Paper sx={{ maxWidth: 560, width: '100%' }}>
-              <form className={styles.form} onSubmit={handleSearchFormSubmit}>
-                <InputBase
-                  placeholder="Pesquisar"
-                  onChange={handleSearchTermInputTextChange}
-                  value={searchedTerm || ''}
-                />
-
-                <IconButton type="submit" aria-label="search">
-                  <Search />
-                </IconButton>
-              </form>
-            </Paper>
-          </div>
+      <S.Container>
+        <S.InnerContainer>
+          <S.SearchForm animateToTop={shouldAnimateSearchForm}>
+            <S.SearchForm__Form onSubmit={searchForm.handleSubmit(handleSearchFormSubmit)}>
+              <ControlledSearchInput
+                name="searchTerm"
+                control={searchForm.control}
+                placeholder="Pesquisar"
+                rightButtonIcon={fetchStatus === 'FETCHING' || fetchStatus === 'FETCHING_NEXT_PAGE'
+                  ? <CircularProgress color="inherit" size="1.5rem" />
+                  : <Search />}
+                rightButtonType="submit"
+                disableRightButton={fetchStatus === 'FETCHING' || fetchStatus === 'FETCHING_NEXT_PAGE'}
+              />
+            </S.SearchForm__Form>
+          </S.SearchForm>
 
           {(isSearched || hasStoredSearch) && !videosList.length && (
             <ErrorFeedback
@@ -185,52 +189,41 @@ export default function Home() {
 
           {(isSearched || hasStoredSearch) && !!videosList.length && (
             <>
-              <div className={styles.videoCardsContainer}>
+              <S.VideoCardsGrid>
                 {videosList.map(video => <VideoCard key={video.key} video={video} />)}
 
-                {isLoadingMore && !showErrorFeedback && (
-                  <Card className={styles.videoCard}>
+                {fetchStatus === 'FETCHING_NEXT_PAGE' && (
+                  <Card>
                     <VideoCardSkeleton />
                   </Card>
                 )}
-              </div>
+              </S.VideoCardsGrid>
 
-              {!isLoadingMore && !showErrorFeedback && (
+              {fetchStatus !== 'FETCHING' && fetchStatus !== 'FETCHING_NEXT_PAGE' && nextPageToken && (
                 <Box ref={loadMoreVideosElementRef} sx={{ height: '2rem' }} />
               )}
 
-              {!!showErrorFeedback && (
+              {fetchStatus === 'ERROR' && (
                 <ErrorFeedback
                   title="Ocorreu um erro."
-                  message="Não foi possível buscar os vídeos."
-                  retryCallback={videosList.length ? loadMoreVideos : loadVideos}
+                  message={`Não foi possível buscar os vídeos${nextPageToken ? ' da próxima página' : ''}.`}
+                  retryCallback={() => getVideos({ searchTerm: searchedTerm, pageToken: nextPageToken })}
                 />
               )}
             </>
           )}
-        </div>
+        </S.InnerContainer>
 
-        <Backdrop style={{ zIndex: 1 }} open={isLoading}>
+        <Backdrop style={{ zIndex: 1 }} open={fetchStatus === 'FETCHING'}>
           <CircularProgress color="primary" />
         </Backdrop>
-      </div>
+      </S.Container>
     </>
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  const session = await unstable_getServerSession(req, res, authOptions);
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/auth/signin',
-        permanent: false,
-      },
-    };
-  }
-
+export const getServerSideProps: GetServerSideProps = requireAuthentication(async () => {
   return {
     props: {}
   };
-}
+});

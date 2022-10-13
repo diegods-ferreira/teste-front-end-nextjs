@@ -19,8 +19,16 @@ export default async function getVideoDetails(request: NextApiRequest, response:
         key: process.env.YOUTUBE_API_KEY,
       },
     });
-  
-    return response.json(youtubeApiResponse.data.items[0]);
+
+    const video = youtubeApiResponse.data.items[0];
+
+    if (video) {
+      return response.json(video);
+    } else {
+      return response.status(500).json({
+        message: 'Ocorreu um erro ao tentar buscar as informações desse vídeo. Tente novamente mais tarde, por favor.'
+      });
+    }
   } catch (err) {
     if (
       err.response?.data?.error?.code === 403 &&

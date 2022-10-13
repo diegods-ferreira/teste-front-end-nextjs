@@ -1,12 +1,12 @@
 import { Button } from '@mui/material';
 import { useRouter } from 'next/router';
 
-import styles from './styles.module.scss';
+import * as S from './styles';
 
 interface ErrorFeedbackProps {
   title: string;
   message: string;
-  retryCallback?: () => void | Promise<void>;
+  retryCallback?: () => any | Promise<any>;
   showGoBackButton?: boolean;
 }
 
@@ -18,7 +18,7 @@ export function ErrorFeedback({ title, message, retryCallback, showGoBackButton 
   };
 
   return (
-    <div className={styles.errorFeedbackContainer}>
+    <S.Container>
       <img src="/images/not-found.png" alt="Not found" />
 
       <strong>{title}</strong>
@@ -26,11 +26,7 @@ export function ErrorFeedback({ title, message, retryCallback, showGoBackButton 
       <span>{message}</span>
       
       {!!retryCallback && (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={retryCallback}
-        >
+        <Button variant="contained" onClick={retryCallback}>
           Tentar novamente
         </Button>
       )}
@@ -40,6 +36,6 @@ export function ErrorFeedback({ title, message, retryCallback, showGoBackButton 
           Voltar
         </Button>
       )}
-    </div>
+    </S.Container>
   );
 }
