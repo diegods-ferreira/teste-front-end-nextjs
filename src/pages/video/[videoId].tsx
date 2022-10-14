@@ -1,11 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { AccordionDetails, AccordionSummary, IconButton, Typography } from '@mui/material';
 import { ArrowBack, ExpandMore, RemoveRedEye, ThumbDown, ThumbUp } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-import { useQuery } from '@tanstack/react-query';
 
 import { requireAuthentication } from '../../hocs/require-authentication';
 
@@ -23,27 +22,36 @@ type VideoDetails = Omit<Video, 'id'> & {
   url: string;
 };
 
+type FetchStatus = 'IDLE' | 'FETCHING' | 'SUCCESS' | 'ERROR';
+
 export default function VideoDetails() {
   const router = useRouter();
 
   const [video, setVideo] = useState<VideoDetails | null>(null);
+  const [fetchStatus, setFetchStatus] = useState<FetchStatus>('FETCHING');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const getVideoData = useCallback(async () => {
-    const response = await api.get<VideoDetails>(`/videos/${router.query.videoId}`);
-    return response.data;
-  }, [router.query.videoId]);
+    try {
+      const response = await api.get<VideoDetails>(`/videos/${router.query.videoId}`);
 
-  const videoDataQuery = useQuery<VideoDetails>(['videoData', router.query.videoId], async () => getVideoData(), {
-    enabled: !!router.query?.videoId,
-    onSuccess: (video) => {
-      const url = `https://www.youtube.com/embed/${video.id}`;
-      setVideo({ ...video, url });
-    },
-    onError: (err: any) => {
+      const video = response.data;
+
+      if (video) {
+        const url = `https://www.youtube.com/embed/${video.id}`;
+        setVideo({ ...video, url });
+  
+        setFetchStatus('SUCCESS');
+      } else {
+        setFetchStatus('ERROR');
+      }
+    } catch (err) {
       toast(err.response.data.message, { type: 'error' });
+      console.log(err.response.data);
+
+      setFetchStatus('ERROR');
     }
-  });
+  }, [router.query.videoId]);
 
   const handleToggleDescriptionAccordion = useCallback(
     (_: any, expanded: boolean) => {
@@ -56,6 +64,10 @@ export default function VideoDetails() {
     router.back();
   }, [router]);
 
+  useEffect(() => {
+    getVideoData();
+  }, [getVideoData]);
+
   return (
     <>
       <Head>
@@ -63,16 +75,16 @@ export default function VideoDetails() {
       </Head>
 
       {(() => {
-        if (videoDataQuery.isLoading || videoDataQuery.isFetching) {
+        if (fetchStatus === 'FETCHING') {
           return <VideoDetailsSkeleton />;
         }
 
-        if (videoDataQuery.isError || (videoDataQuery.isSuccess && !video)) {
+        if (fetchStatus === 'ERROR') {
           return (
             <ErrorFeedback
               title="Ops..."
               message="Ocorreu um erro ao carregar os detalhes do vídeo."
-              retryCallback={videoDataQuery.refetch}
+              retryCallback={getVideoData}
               showGoBackButton
             />
           );
@@ -106,7 +118,7 @@ export default function VideoDetails() {
                 />
               </S.VideoPlayer>
 
-              <S.VideoMeta animationDelay={0.6}>
+              <S.VideoMeta animationdelay={0.6}>
                 <h5 aria-label="channel-title">{video.snippet?.channelTitle}</h5>
 
                 <S.VideoMeta__InteractionCounters>
@@ -139,7 +151,7 @@ export default function VideoDetails() {
                 </AccordionDetails>
               </S.VideoDescription>
 
-              <S.VideoMeta animationDelay={1}>
+              <S.VideoMeta animationdelay={1}>
                 <S.VideoMeta__Statistics aria-label="views-count">
                   <RemoveRedEye fontSize="small" />
                   <Typography variant="caption">

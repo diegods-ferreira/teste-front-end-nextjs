@@ -2,19 +2,8 @@ import styled, { css, keyframes } from 'styled-components';
 import { Accordion, Paper } from '@mui/material';
 
 interface VideoMetaProps {
-  animationDelay: number;
+  animationdelay: number;
 }
-
-const appearFromUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
 
 const appearFromLeft = keyframes`
   from {
@@ -107,8 +96,8 @@ export const VideoMeta = styled(Paper).attrs({
   animation: ${appearFromLeft} 0.8s;
   animation-fill-mode: backwards;
 
-  ${({ animationDelay }) => animationDelay && css`
-    animation-delay: ${animationDelay}s;
+  ${({ animationdelay }) => animationdelay && css`
+    animation-delay: ${animationdelay}s;
   `}
 
   & > h5 {
